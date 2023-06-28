@@ -10,7 +10,6 @@ enum Command {
     Input,
     JumpForward(usize),
     JumpBack(usize),
-    Nothing,
 }
 
 
@@ -40,7 +39,7 @@ fn translate_into_commands(string: &String) -> Result<Vec<Command>, String> {
                     ',' => Command::Input,
                     '[' => {
                         pos_in_commands.push(current_cmd_ptr as usize);
-                        Command::Nothing
+                        Command::JumpForward(0)
                     },
                     ']' => {
                         if let Some(pos) = pos_in_commands.pop() {
@@ -51,7 +50,7 @@ fn translate_into_commands(string: &String) -> Result<Vec<Command>, String> {
                         }
                     },
                     _   => {
-                        Command::Nothing
+                        continue;
                     },
                 };
                 current_cmd_ptr += 1;
@@ -98,7 +97,6 @@ impl State {
             Command::Output            => self.output()?,
             Command::JumpForward(pos)  => self.jump_forward(pos)?,
             Command::JumpBack(pos)     => self.jump_back(pos)?,
-            Command::Nothing           => self.pass()?,
         };
         self.pc += 1;
         Ok(RunningState::Running)
@@ -187,10 +185,6 @@ impl State {
         if self.array[self.pointer] != 0 {
             self.pc = pos;
         }
-        Ok(RunningState::Running)
-    }
-
-    fn pass(&mut self) -> Result<RunningState, String> {
         Ok(RunningState::Running)
     }
 }
