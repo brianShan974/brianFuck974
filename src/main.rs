@@ -1,6 +1,5 @@
 use clap::{App, Arg};
 
-
 enum Command {
     MoveRight,
     MoveLeft,
@@ -12,15 +11,13 @@ enum Command {
     JumpBack(usize),
 }
 
-
 enum RunningState {
     Running,
     Finished,
 }
 
-
 fn translate_into_commands(string: &String) -> Result<Vec<Command>, String> {
-    let mut commands: Vec<Command>     = Vec::new();
+    let mut commands: Vec<Command> = Vec::new();
     let mut pos_in_commands: Vec<usize> = Vec::new();
 
     let mut chars = string.chars();
@@ -40,29 +37,30 @@ fn translate_into_commands(string: &String) -> Result<Vec<Command>, String> {
                     '[' => {
                         pos_in_commands.push(current_cmd_ptr as usize);
                         Command::JumpForward(0)
-                    },
+                    }
                     ']' => {
                         if let Some(pos) = pos_in_commands.pop() {
                             commands[pos] = Command::JumpForward(current_cmd_ptr as usize);
                             Command::JumpBack(pos)
                         } else {
-                            return Err(String::from("Syntax Error: '[' and ']' does not properly match."));
+                            return Err(String::from(
+                                "Syntax Error: '[' and ']' does not properly match.",
+                            ));
                         }
-                    },
-                    _   => {
+                    }
+                    _ => {
                         continue;
-                    },
+                    }
                 };
                 current_cmd_ptr += 1;
                 commands.push(current_cmd);
-            },
+            }
             None => break,
         };
-    };
+    }
 
     Ok(commands)
 }
-
 
 const ARRAY_SIZE: usize = 32768;
 struct State {
@@ -72,14 +70,13 @@ struct State {
     commands: Vec<Command>,
 }
 
-
 impl State {
     fn new(commands: Vec<Command>) -> State {
         State {
-            pointer: 0,  // program counter
+            pointer: 0, // program counter
             array: [0; ARRAY_SIZE],
             pc: 0,
-            commands
+            commands,
         }
     }
 
@@ -89,14 +86,14 @@ impl State {
         }
         let current_cmd = &self.commands[self.pc];
         match *current_cmd {
-            Command::MoveRight         => self.move_to_the_right()?,
-            Command::MoveLeft          => self.move_to_the_left()?,
-            Command::Increment         => self.increment()?,
-            Command::Decrement         => self.decrement()?,
-            Command::Input             => self.input()?,
-            Command::Output            => self.output()?,
-            Command::JumpForward(pos)  => self.jump_forward(pos)?,
-            Command::JumpBack(pos)     => self.jump_back(pos)?,
+            Command::MoveRight => self.move_to_the_right()?,
+            Command::MoveLeft => self.move_to_the_left()?,
+            Command::Increment => self.increment()?,
+            Command::Decrement => self.decrement()?,
+            Command::Input => self.input()?,
+            Command::Output => self.output()?,
+            Command::JumpForward(pos) => self.jump_forward(pos)?,
+            Command::JumpBack(pos) => self.jump_back(pos)?,
         };
         self.pc += 1;
         Ok(RunningState::Running)
@@ -105,7 +102,9 @@ impl State {
     fn move_to_the_right(&mut self) -> Result<RunningState, String> {
         self.pointer += 1;
         if self.pointer >= self.array.len() {
-            Err(String::from("Index Error: You have gone too far to the right!"))
+            Err(String::from(
+                "Index Error: You have gone too far to the right!",
+            ))
         } else {
             Ok(RunningState::Running)
         }
@@ -113,7 +112,9 @@ impl State {
 
     fn move_to_the_left(&mut self) -> Result<RunningState, String> {
         if self.pointer == 0 {
-            Err(String::from("Index Error: You have gone too far to the left!"))
+            Err(String::from(
+                "Index Error: You have gone too far to the left!",
+            ))
         } else {
             self.pointer -= 1;
             Ok(RunningState::Running)
@@ -122,7 +123,9 @@ impl State {
 
     fn increment(&mut self) -> Result<RunningState, String> {
         if self.array[self.pointer] + 1 > std::i32::MAX {
-            Err(String::from("Overflow Error: The number in the cell is too large!"))
+            Err(String::from(
+                "Overflow Error: The number in the cell is too large!",
+            ))
         } else {
             self.array[self.pointer] += 1;
             Ok(RunningState::Running)
@@ -131,7 +134,9 @@ impl State {
 
     fn decrement(&mut self) -> Result<RunningState, String> {
         if self.array[self.pointer] - 1 < std::i32::MIN {
-            Err(String::from("Overflow Error: The number in the cell is too small!"))
+            Err(String::from(
+                "Overflow Error: The number in the cell is too small!",
+            ))
         } else {
             self.array[self.pointer] -= 1;
             Ok(RunningState::Running)
@@ -144,11 +149,15 @@ impl State {
             if let Some(converted_char) = char::from_u32(data as u32) {
                 print!("{}", converted_char);
             } else {
-                return Err(String::from("Value Error: The value in the cell is not a valid Unicode character!"));
+                return Err(String::from(
+                    "Value Error: The value in the cell is not a valid Unicode character!",
+                ));
             }
             Ok(RunningState::Running)
         } else {
-            Err(String::from("Value Error: The value in the cell is not a valid Unicode character!"))
+            Err(String::from(
+                "Value Error: The value in the cell is not a valid Unicode character!",
+            ))
         }
     }
 
@@ -172,7 +181,9 @@ impl State {
 
     fn jump_forward(&mut self, pos: usize) -> Result<RunningState, String> {
         if pos > self.array.len() {
-            Err(String::from("Runtime Error: You have gone too far to the right!"))
+            Err(String::from(
+                "Runtime Error: You have gone too far to the right!",
+            ))
         } else {
             if self.array[self.pointer] == 0 {
                 self.pc = pos;
@@ -188,7 +199,6 @@ impl State {
         Ok(RunningState::Running)
     }
 }
-
 
 fn main() {
     use std::fs;
@@ -214,26 +224,26 @@ fn main() {
         cmd_string = cmd_string + input;
     } else if mode == "file" {
         match fs::read_to_string(input) {
-            Ok(string)  => {
+            Ok(string) => {
                 cmd_string = string;
-            },
-            Err(_)      => panic!("Failed to read from the file!"),
+            }
+            Err(_) => panic!("Failed to read from the file!"),
         };
     }
 
     match translate_into_commands(&cmd_string) {
-        Ok(commands)    => {
+        Ok(commands) => {
             let mut state = State::new(commands);
             loop {
                 match state.execute_once() {
-                    Ok(RunningState::Running)   => {},
-                    Ok(RunningState::Finished)  => {
+                    Ok(RunningState::Running) => {}
+                    Ok(RunningState::Finished) => {
                         break;
-                    },
-                    Err(info)                   => panic!("{}", info),
+                    }
+                    Err(info) => panic!("{}", info),
                 }
-            };
-        },
-        Err(info)       => panic!("{}", info),
+            }
+        }
+        Err(info) => panic!("{}", info),
     };
 }
