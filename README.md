@@ -14,6 +14,6 @@ You can also directly run a line of the program in the command line. For example
 cargo run -- cl ">>>>><<<<<+++++-----"
 ```
 Notice that the double quotes are necessary here. Without them, `>>` will be recognised as the redirecting symbol on UNIX systems.
-The double quotes won't affect the result of the program, because all characters, except for that 8 commands, are ignored.
+The double quotes won't affect the result of the program, because all characters, except for those 8 commands, are ignored.
 
 By the way, rust is the best language ever.
