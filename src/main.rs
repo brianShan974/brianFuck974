@@ -16,47 +16,42 @@ enum RunningState {
     Finished,
 }
 
-fn translate_into_commands(string: &String) -> Result<Vec<Command>, String> {
+fn translate_into_commands(string: &str) -> Result<Vec<Command>, String> {
     let mut commands: Vec<Command> = Vec::new();
     let mut pos_in_commands: Vec<usize> = Vec::new();
 
-    let mut chars = string.chars();
+    let chars = string.chars();
 
     let mut current_cmd_ptr: isize = 0;
 
-    loop {
-        match chars.next() {
-            Some(current_char) => {
-                let current_cmd = match current_char {
-                    '>' => Command::MoveRight,
-                    '<' => Command::MoveLeft,
-                    '+' => Command::Increment,
-                    '-' => Command::Decrement,
-                    '.' => Command::Output,
-                    ',' => Command::Input,
-                    '[' => {
-                        pos_in_commands.push(current_cmd_ptr as usize);
-                        Command::JumpForward(0)
-                    }
-                    ']' => {
-                        if let Some(pos) = pos_in_commands.pop() {
-                            commands[pos] = Command::JumpForward(current_cmd_ptr as usize);
-                            Command::JumpBack(pos)
-                        } else {
-                            return Err(String::from(
-                                "Syntax Error: '[' and ']' does not properly match.",
-                            ));
-                        }
-                    }
-                    _ => {
-                        continue;
-                    }
-                };
-                current_cmd_ptr += 1;
-                commands.push(current_cmd);
+    for current_char in chars {
+        let current_cmd = match current_char {
+            '>' => Command::MoveRight,
+            '<' => Command::MoveLeft,
+            '+' => Command::Increment,
+            '-' => Command::Decrement,
+            '.' => Command::Output,
+            ',' => Command::Input,
+            '[' => {
+                pos_in_commands.push(current_cmd_ptr as usize);
+                Command::JumpForward(0)
             }
-            None => break,
+            ']' => {
+                if let Some(pos) = pos_in_commands.pop() {
+                    commands[pos] = Command::JumpForward(current_cmd_ptr as usize);
+                    Command::JumpBack(pos)
+                } else {
+                    return Err(String::from(
+                        "Syntax Error: '[' and ']' does not properly match.",
+                    ));
+                }
+            }
+            _ => {
+                continue;
+            }
         };
+        current_cmd_ptr += 1;
+        commands.push(current_cmd);
     }
 
     Ok(commands)
@@ -122,7 +117,7 @@ impl State {
     }
 
     fn increment(&mut self) -> Result<RunningState, String> {
-        if self.array[self.pointer] + 1 > std::i32::MAX {
+        if self.array[self.pointer] + 1 < self.array[self.pointer] {
             Err(String::from(
                 "Overflow Error: The number in the cell is too large!",
             ))
@@ -133,7 +128,7 @@ impl State {
     }
 
     fn decrement(&mut self) -> Result<RunningState, String> {
-        if self.array[self.pointer] - 1 < std::i32::MIN {
+        if self.array[self.pointer] - 1 > self.array[self.pointer] {
             Err(String::from(
                 "Overflow Error: The number in the cell is too small!",
             ))
@@ -145,20 +140,14 @@ impl State {
 
     fn output(&mut self) -> Result<RunningState, String> {
         let data = self.array[self.pointer];
-        if data == data as i32 {
-            if let Some(converted_char) = char::from_u32(data as u32) {
-                print!("{}", converted_char);
-            } else {
-                return Err(String::from(
-                    "Value Error: The value in the cell is not a valid Unicode character!",
-                ));
-            }
-            Ok(RunningState::Running)
+        if let Some(converted_char) = char::from_u32(data as u32) {
+            print!("{}", converted_char);
         } else {
-            Err(String::from(
+            return Err(String::from(
                 "Value Error: The value in the cell is not a valid Unicode character!",
-            ))
+            ));
         }
+        Ok(RunningState::Running)
     }
 
     fn input(&mut self) -> Result<RunningState, String> {
@@ -166,7 +155,7 @@ impl State {
         use std::io;
 
         let mut input_buffer = String::new();
-        if let Err(_) = io::stdin().read_line(&mut input_buffer) {
+        if io::stdin().read_line(&mut input_buffer).is_err() {
             return Err(String::from("IO Error: Unable to get character input!"));
         };
 
@@ -221,7 +210,7 @@ fn main() {
     let mut cmd_string = String::new();
 
     if mode == "cl" {
-        cmd_string = cmd_string + input;
+        cmd_string += input;
     } else if mode == "file" {
         match fs::read_to_string(input) {
             Ok(string) => {
