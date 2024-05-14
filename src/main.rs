@@ -20,11 +20,9 @@ fn translate_into_commands(string: &str) -> Result<Vec<Command>, String> {
     let mut commands: Vec<Command> = Vec::new();
     let mut pos_in_commands: Vec<usize> = Vec::new();
 
-    let chars = string.chars();
+    let mut current_cmd_ptr: usize = 0;
 
-    let mut current_cmd_ptr: isize = 0;
-
-    for current_char in chars {
+    for current_char in string.chars() {
         let current_cmd = match current_char {
             '>' => Command::MoveRight,
             '<' => Command::MoveLeft,
@@ -33,12 +31,12 @@ fn translate_into_commands(string: &str) -> Result<Vec<Command>, String> {
             '.' => Command::Output,
             ',' => Command::Input,
             '[' => {
-                pos_in_commands.push(current_cmd_ptr as usize);
+                pos_in_commands.push(current_cmd_ptr);
                 Command::JumpForward(0)
             }
             ']' => {
                 if let Some(pos) = pos_in_commands.pop() {
-                    commands[pos] = Command::JumpForward(current_cmd_ptr as usize);
+                    commands[pos] = Command::JumpForward(current_cmd_ptr);
                     Command::JumpBack(pos)
                 } else {
                     return Err(String::from(
