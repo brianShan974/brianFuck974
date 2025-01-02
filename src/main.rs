@@ -1,191 +1,14 @@
+mod command;
+mod execution_state;
+mod parsing_src;
+mod running_state;
+
 use clap::{App, Arg};
 
-enum Command {
-    MoveRight,
-    MoveLeft,
-    Increment,
-    Decrement,
-    Output,
-    Input,
-    JumpForward(usize),
-    JumpBack(usize),
-}
-
-enum RunningState {
-    Running,
-    Finished,
-}
-
-fn translate_into_commands(string: &str) -> Result<Vec<Command>, String> {
-    let mut commands: Vec<Command> = Vec::new();
-    let mut pos_in_commands: Vec<usize> = Vec::new();
-
-    let mut current_cmd_ptr: usize = 0;
-
-    for current_char in string.chars() {
-        let current_cmd = match current_char {
-            '>' => Command::MoveRight,
-            '<' => Command::MoveLeft,
-            '+' => Command::Increment,
-            '-' => Command::Decrement,
-            '.' => Command::Output,
-            ',' => Command::Input,
-            '[' => {
-                pos_in_commands.push(current_cmd_ptr);
-                Command::JumpForward(0)
-            }
-            ']' => {
-                if let Some(pos) = pos_in_commands.pop() {
-                    commands[pos] = Command::JumpForward(current_cmd_ptr);
-                    Command::JumpBack(pos)
-                } else {
-                    return Err(String::from(
-                        "Syntax Error: '[' and ']' does not properly match.",
-                    ));
-                }
-            }
-            _ => {
-                continue;
-            }
-        };
-        current_cmd_ptr += 1;
-        commands.push(current_cmd);
-    }
-
-    Ok(commands)
-}
-
-const ARRAY_SIZE: usize = 32768;
-struct State {
-    pointer: usize,
-    array: [i32; ARRAY_SIZE],
-    pc: usize,
-    commands: Vec<Command>,
-}
-
-impl State {
-    fn new(commands: Vec<Command>) -> State {
-        State {
-            pointer: 0, // program counter
-            array: [0; ARRAY_SIZE],
-            pc: 0,
-            commands,
-        }
-    }
-
-    fn execute_once(&mut self) -> Result<RunningState, String> {
-        if self.pc >= self.commands.len() {
-            return Ok(RunningState::Finished);
-        }
-        let current_cmd = &self.commands[self.pc];
-        match *current_cmd {
-            Command::MoveRight => self.move_to_the_right()?,
-            Command::MoveLeft => self.move_to_the_left()?,
-            Command::Increment => self.increment()?,
-            Command::Decrement => self.decrement()?,
-            Command::Input => self.input()?,
-            Command::Output => self.output()?,
-            Command::JumpForward(pos) => self.jump_forward(pos)?,
-            Command::JumpBack(pos) => self.jump_back(pos)?,
-        };
-        self.pc += 1;
-        Ok(RunningState::Running)
-    }
-
-    fn move_to_the_right(&mut self) -> Result<RunningState, String> {
-        self.pointer += 1;
-        if self.pointer >= self.array.len() {
-            Err(String::from(
-                "Index Error: You have gone too far to the right!",
-            ))
-        } else {
-            Ok(RunningState::Running)
-        }
-    }
-
-    fn move_to_the_left(&mut self) -> Result<RunningState, String> {
-        if self.pointer == 0 {
-            Err(String::from(
-                "Index Error: You have gone too far to the left!",
-            ))
-        } else {
-            self.pointer -= 1;
-            Ok(RunningState::Running)
-        }
-    }
-
-    fn increment(&mut self) -> Result<RunningState, String> {
-        if self.array[self.pointer] + 1 < self.array[self.pointer] {
-            Err(String::from(
-                "Overflow Error: The number in the cell is too large!",
-            ))
-        } else {
-            self.array[self.pointer] += 1;
-            Ok(RunningState::Running)
-        }
-    }
-
-    fn decrement(&mut self) -> Result<RunningState, String> {
-        if self.array[self.pointer] - 1 > self.array[self.pointer] {
-            Err(String::from(
-                "Overflow Error: The number in the cell is too small!",
-            ))
-        } else {
-            self.array[self.pointer] -= 1;
-            Ok(RunningState::Running)
-        }
-    }
-
-    fn output(&mut self) -> Result<RunningState, String> {
-        let data = self.array[self.pointer];
-        if let Some(converted_char) = char::from_u32(data as u32) {
-            print!("{}", converted_char);
-        } else {
-            return Err(String::from(
-                "Value Error: The value in the cell is not a valid Unicode character!",
-            ));
-        }
-        Ok(RunningState::Running)
-    }
-
-    fn input(&mut self) -> Result<RunningState, String> {
-        println!("Please enter a character; if you enter more than one character, only the first one will be taken:");
-        use std::io;
-
-        let mut input_buffer = String::new();
-        if io::stdin().read_line(&mut input_buffer).is_err() {
-            return Err(String::from("IO Error: Unable to get character input!"));
-        };
-
-        if let Some(input_char) = input_buffer.chars().next() {
-            self.array[self.pointer] = input_char as i32;
-        } else {
-            return Err(String::from("Value Error: Don't enter an empty string!"));
-        };
-
-        Ok(RunningState::Running)
-    }
-
-    fn jump_forward(&mut self, pos: usize) -> Result<RunningState, String> {
-        if pos > self.array.len() {
-            Err(String::from(
-                "Runtime Error: You have gone too far to the right!",
-            ))
-        } else {
-            if self.array[self.pointer] == 0 {
-                self.pc = pos;
-            }
-            Ok(RunningState::Running)
-        }
-    }
-
-    fn jump_back(&mut self, pos: usize) -> Result<RunningState, String> {
-        if self.array[self.pointer] != 0 {
-            self.pc = pos;
-        }
-        Ok(RunningState::Running)
-    }
-}
+use command::Command;
+use execution_state::ExecutionState;
+use parsing_src::translate_into_commands;
+use running_state::RunningState;
 
 fn main() {
     use std::fs;
@@ -193,11 +16,11 @@ fn main() {
         .version("0.1")
         .about("A brainfuck interpreter written in rust.")
         .arg(Arg::with_name("mode")
-             .help("Has 2 possible values: 'file' and 'cl'. 'file' stands for file mode, and 'cl' stands for command line mode.")
+             .help("Has 2 possible values: 'f' and 'c'. 'f' stands for file mode, and 'c' stands for command line mode.")
              .takes_value(true)
              .required(true))
         .arg(Arg::with_name("input")
-             .help("In file mode, a file name should be provided. In cl mode, a string of source could should be provided in the command line.")
+             .help("In file mode, a file name should be provided. In command line mode, a string of source could should be provided in the command line.")
              .takes_value(true)
              .required(true))
         .get_matches();
@@ -207,9 +30,9 @@ fn main() {
 
     let mut cmd_string = String::new();
 
-    if mode == "cl" {
+    if mode == "c" {
         cmd_string += input;
-    } else if mode == "file" {
+    } else if mode == "f" {
         match fs::read_to_string(input) {
             Ok(string) => {
                 cmd_string = string;
@@ -220,7 +43,7 @@ fn main() {
 
     match translate_into_commands(&cmd_string) {
         Ok(commands) => {
-            let mut state = State::new(commands);
+            let mut state = ExecutionState::new(commands);
             loop {
                 match state.execute_once() {
                     Ok(RunningState::Running) => {}
