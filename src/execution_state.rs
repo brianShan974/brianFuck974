@@ -1,8 +1,10 @@
+use std::io;
+use std::io::Read;
+
 use crate::Command;
 use crate::RunningState;
 
 type Int = i128;
-
 const INITIAL_SIZE: usize = 32;
 
 pub struct ExecutionState {
@@ -102,19 +104,13 @@ impl ExecutionState {
     }
 
     fn input(&mut self) -> Result<RunningState, String> {
-        println!("Please enter a character; if you enter more than one character, only the first one will be taken:");
-        use std::io;
+        let input_char = io::stdin()
+            .bytes()
+            .next()
+            .ok_or("IO Error: Unable to get character input!")?
+            .map_err(|_err| "IO Error: Unable to get character input!")?;
 
-        let mut input_buffer = String::new();
-        if io::stdin().read_line(&mut input_buffer).is_err() {
-            return Err(String::from("IO Error: Unable to get character input!"));
-        };
-
-        if let Some(input_char) = input_buffer.chars().next() {
-            self.array[self.pointer] = input_char as Int;
-        } else {
-            return Err(String::from("Value Error: Don't enter an empty string!"));
-        };
+        self.array[self.pointer] = input_char as Int;
 
         Ok(RunningState::Running)
     }
