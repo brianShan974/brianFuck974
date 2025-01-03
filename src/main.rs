@@ -28,10 +28,13 @@ fn main() {
                     Ok(RunningState::Finished) => {
                         break;
                     }
-                    Err(info) => panic!("{}", info),
+                    Err(info) => {
+                        println!("{}", info);
+                        break;
+                    }
                 }
             }
         }
-        Err(info) => panic!("{}", info),
+        Err(info) => println!("{}", info),
     };
 }
