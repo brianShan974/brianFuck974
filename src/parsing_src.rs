@@ -36,5 +36,11 @@ pub fn translate_into_commands(string: &str) -> Result<Vec<Command>, String> {
         commands.push(current_cmd);
     }
 
-    Ok(commands)
+    if !pos_in_commands.is_empty() {
+        Err(String::from(
+            "Syntax Error: '[' and ']' does not properly match.",
+        ))
+    } else {
+        Ok(commands)
+    }
 }
