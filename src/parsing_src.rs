@@ -24,7 +24,7 @@ pub fn translate_into_commands(string: &str) -> Result<Vec<Command>, String> {
                     Command::JumpBack(pos)
                 } else {
                     return Err(String::from(
-                        "Syntax Error: '[' and ']' does not properly match.",
+                        "Syntax Error: '[' and ']' does not properly match. There are more ']'s than '['s ",
                     ));
                 }
             }
@@ -38,7 +38,7 @@ pub fn translate_into_commands(string: &str) -> Result<Vec<Command>, String> {
 
     if !pos_in_commands.is_empty() {
         Err(String::from(
-            "Syntax Error: '[' and ']' does not properly match.",
+            "Syntax Error: '[' and ']' does not properly match. There are more '['s than ']'s ",
         ))
     } else {
         Ok(commands)
