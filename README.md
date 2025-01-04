@@ -20,5 +20,18 @@ cargo run -- example.bf
 
 to run the program.
 
+To install this interpreter on the system,
+run
+
+```
+cargo install --path .
+```
+
+in the project directory.
+After installation,
+you can run `brianfuck974` to call this interpreter.
+If you want to change the name of the command,
+please refer to `Cargo.toml` and change the `name` under `[[bin]]` before installation.
+
 By the way,
 rust is the best language ever.
