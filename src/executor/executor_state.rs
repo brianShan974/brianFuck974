@@ -80,14 +80,6 @@ impl ExecutorState {
         self.pointer
     }
 
-    pub fn get_current_command(&self) -> ExecutorCommand {
-        self.commands[self.pc].clone()
-    }
-
-    pub fn get_current_cell(&self) -> Int {
-        self.array[self.pointer]
-    }
-
     pub fn get_cell(&self, index: usize) -> Option<Int> {
         self.array.get(index).copied()
     }
