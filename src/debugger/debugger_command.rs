@@ -133,6 +133,7 @@ impl TryFrom<String> for DebuggerCommand {
 
         if let Some(initial) = input.next() {
             match initial {
+                "" => Ok(Self::NoOp),
                 "pi" | "print_instruction" => {
                     let index = parse_optional_usize(&mut input)?;
                     Ok(Self::PrintInstruction(index))

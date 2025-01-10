@@ -1,6 +1,7 @@
 use std::{
     char,
     collections::{HashMap, HashSet},
+    io::{self, Write},
 };
 
 use super::{
@@ -250,7 +251,11 @@ impl DebuggerState {
             self.state.get_pointer()
         };
 
-        unimplemented!()
+        if self.state.set_cell_value(index, value) {
+            Ok(DebuggingState::Running)
+        } else {
+            Err(DebuggingError::IndexOutOfBounds)
+        }
     }
 
     fn set_marked_cell(&mut self, value: Int, mark: String) -> DebuggingResult {
@@ -468,13 +473,16 @@ impl DebuggerState {
         if self.breakpoints.contains(&index) {
             print!(", Breakpoint: true");
         }
+        io::stdout().flush().unwrap();
         println!();
     }
 
     fn p_cell(&self, index: usize, cell: &Int) {
         print!("Position: {}, Value: {}", index, cell);
         if let Some(mark) = self.c_marked_indices.get(&index) {
-            println!(", Mark: {}", mark);
+            print!(", Mark: {}", mark);
         }
+        io::stdout().flush().unwrap();
+        println!();
     }
 }

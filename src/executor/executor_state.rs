@@ -1,7 +1,4 @@
-use std::{
-    io::{self, Read},
-    ops::RangeBounds,
-};
+use std::io::{self, Read};
 
 use crate::executor::{executing_state::ExecutionState, executor_command::ExecutorCommand};
 
@@ -119,6 +116,15 @@ impl ExecutorState {
     pub fn set_pointer(&mut self, index: usize) -> bool {
         if self.validate_cell_index(index) {
             self.pointer = index;
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn set_cell_value(&mut self, index: usize, value: Int) -> bool {
+        if self.validate_cell_index(index) {
+            self.array[index] = value;
             true
         } else {
             false
