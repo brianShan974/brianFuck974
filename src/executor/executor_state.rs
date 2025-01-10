@@ -3,12 +3,13 @@ use std::{
     ops::RangeBounds,
 };
 
-use crate::executor::{
-    executing_state::{ExecutionResult, ExecutionState},
-    executor_command::ExecutorCommand,
-};
+use crate::executor::{executing_state::ExecutionState, executor_command::ExecutorCommand};
+
+use super::executing_error::ExecutionError;
 
 pub type Int = i128;
+
+pub type ExecutionResult = Result<ExecutionState, ExecutionError>;
 
 const INITIAL_SIZE: usize = 32;
 
@@ -45,7 +46,7 @@ impl ExecutorState {
         Ok(ExecutionState::Running)
     }
 
-    pub fn execute_command(&mut self, command: ExecutorCommand) -> Result<usize, String> {
+    pub fn execute_command(&mut self, command: ExecutorCommand) -> Result<usize, ExecutionError> {
         self.check_state_valid()?;
 
         match command {
@@ -132,12 +133,14 @@ impl ExecutorState {
         (0..self.array.len()).contains(&index)
     }
 
-    fn check_state_valid(&self) -> Result<(), String> {
-        if self.pointer >= self.array.len() || self.pc >= self.commands.len() {
-            return Err(String::from("Runtime Error: You are in an invalid state!"));
+    fn check_state_valid(&self) -> Result<(), ExecutionError> {
+        if self.pc >= self.commands.len() {
+            Err(ExecutionError::ProgramCounterOutOfRange)
+        } else if self.pointer >= self.array.len() {
+            Err(ExecutionError::TooFarRight)
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     fn move_to_the_right(&mut self) -> ExecutionResult {
@@ -152,9 +155,7 @@ impl ExecutorState {
 
     fn move_to_the_left(&mut self) -> ExecutionResult {
         if self.pointer == 0 {
-            Err(String::from(
-                "Index Error: You have gone too far to the left!",
-            ))
+            Err(ExecutionError::TooFarLeft)
         } else {
             self.pointer -= 1;
             Ok(ExecutionState::Running)
@@ -163,9 +164,7 @@ impl ExecutorState {
 
     fn increment(&mut self) -> ExecutionResult {
         if self.array[self.pointer] == Int::MAX {
-            Err(String::from(
-                "Overflow Error: The number in the cell is too large!",
-            ))
+            Err(ExecutionError::Overflow)
         } else {
             self.array[self.pointer] += 1;
             Ok(ExecutionState::Running)
@@ -174,9 +173,7 @@ impl ExecutorState {
 
     fn decrement(&mut self) -> ExecutionResult {
         if self.array[self.pointer] == Int::MIN {
-            Err(String::from(
-                "Overflow Error: The number in the cell is too small!",
-            ))
+            Err(ExecutionError::Underflow)
         } else {
             self.array[self.pointer] -= 1;
             Ok(ExecutionState::Running)
@@ -189,9 +186,7 @@ impl ExecutorState {
         if let Some(converted_char) = char::from_u32(data as u32) {
             print!("{}", converted_char);
         } else {
-            return Err(String::from(
-                "Value Error: The value in the cell is not a valid Unicode character!",
-            ));
+            return Err(ExecutionError::InvalidCharacter);
         }
 
         Ok(ExecutionState::Running)
@@ -201,8 +196,8 @@ impl ExecutorState {
         let input_char = io::stdin()
             .bytes()
             .next()
-            .ok_or("IO Error: Unable to get character input!")?
-            .map_err(|_err| "IO Error: Unable to get character input!")?;
+            .ok_or(ExecutionError::InputError)?
+            .map_err(|_err| ExecutionError::InputError)?;
 
         self.array[self.pointer] = input_char as Int;
 
@@ -211,9 +206,7 @@ impl ExecutorState {
 
     fn jump_forward(&mut self, pos: usize) -> ExecutionResult {
         if pos > self.commands.len() {
-            Err(String::from(
-                "Runtime Error: You have gone too far to the right!",
-            ))
+            Err(ExecutionError::TooFarRight)
         } else {
             if self.array[self.pointer] == 0 {
                 self.pc = pos;
