@@ -3,6 +3,7 @@ pub enum DebuggingError {
     MarkNotFound,
     JumpHistoryEmpty,
     BreakpointNotFound,
+    InvalidInstruction,
 }
 
 impl std::fmt::Display for DebuggingError {
@@ -12,6 +13,7 @@ impl std::fmt::Display for DebuggingError {
             Self::MarkNotFound => write!(f, "The mark does not exist!"),
             Self::JumpHistoryEmpty => write!(f, "There is no jump back destination!"),
             Self::BreakpointNotFound => write!(f, "The breakpoint does not exist!"),
+            Self::InvalidInstruction => write!(f, "The instruction is invalid!"),
         }
     }
 }

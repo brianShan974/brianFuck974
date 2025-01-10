@@ -27,7 +27,7 @@ pub fn execute(cmd: &str) {
 pub fn debug(cmd: &str) {
     match translate_into_commands(cmd, true) {
         Ok((commands, breakpoints)) => {
-            let mut state = ExecutorState::new(commands, breakpoints);
+            let mut state = ExecutorState::new(commands);
             loop {
                 match state.execute_once() {
                     Ok(ExecutionState::Running) => {}

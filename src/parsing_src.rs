@@ -1,13 +1,15 @@
+use std::collections::HashSet;
+
 use crate::executor::executor_command::ExecutorCommand as Command;
 
 pub fn translate_into_commands(
     string: &str,
     debug: bool,
-) -> Result<(Vec<Command>, Vec<usize>), String> {
+) -> Result<(Vec<Command>, HashSet<usize>), String> {
     let mut commands: Vec<Command> = Vec::new();
     let mut pos_in_commands: Vec<usize> = Vec::new();
 
-    let mut breakpoints = Vec::new();
+    let mut breakpoints = HashSet::new();
 
     let mut current_cmd_ptr: usize = 0;
 
@@ -34,7 +36,7 @@ pub fn translate_into_commands(
                 }
             }
             ':' if debug => {
-                breakpoints.push(current_cmd_ptr);
+                breakpoints.insert(current_cmd_ptr);
                 continue;
             }
             _ => {

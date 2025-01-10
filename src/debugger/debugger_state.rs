@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 use super::{debugging_error::DebuggingError, debugging_state::DebuggingState};
 
 use crate::executor::{
+    executing_state::ExecutionState,
     executor_command::ExecutorCommand,
     executor_state::{ExecutorState, Int},
 };
@@ -21,14 +22,14 @@ pub struct DebuggerState {
 }
 
 impl DebuggerState {
-    pub fn new(commands: Vec<ExecutorCommand>) -> Self {
+    pub fn new(commands: Vec<ExecutorCommand>, breakpoints: HashSet<usize>) -> Self {
         Self {
             state: ExecutorState::new(commands),
             i_marks: HashMap::new(),
             i_marked_indices: HashMap::new(),
             c_marks: HashMap::new(),
             c_marked_indices: HashMap::new(),
-            breakpoints: HashSet::new(),
+            breakpoints,
             jump_history: Vec::new(),
             jump_cell_history: Vec::new(),
         }
@@ -189,6 +190,44 @@ impl DebuggerState {
         }
     }
 
+    fn set_cell(&mut self, value: Int, index: Option<usize>) -> DebuggingResult {
+        let index = if let Some(i) = index {
+            i
+        } else {
+            self.state.get_pointer()
+        };
+
+        unimplemented!()
+    }
+
+    fn set_marked_cell(&mut self, value: Int, name: String) -> DebuggingResult {
+        if let Some(index) = self.c_marks.get(&name) {
+            self.set_cell(value, Some(*index))
+        } else {
+            Err(DebuggingError::MarkNotFound)
+        }
+    }
+
+    fn run_instruction(&mut self, instruction: char) -> DebuggingResult {
+        let command = match instruction {
+            '+' => ExecutorCommand::Increment,
+            '-' => ExecutorCommand::Decrement,
+            '>' => ExecutorCommand::MoveRight,
+            '<' => ExecutorCommand::MoveLeft,
+            '.' => ExecutorCommand::Output,
+            ',' => ExecutorCommand::Input,
+            _ => return Err(DebuggingError::InvalidInstruction),
+        };
+
+        match self.state.execute_command(command) {
+            Ok(_) => Ok(DebuggingState::Running),
+            Err(err) => {
+                println!("{}", err);
+                Ok(DebuggingState::Finished)
+            }
+        }
+    }
+
     fn mark(&mut self, name: String, index: Option<usize>) -> DebuggingResult {
         let index = if let Some(i) = index {
             i
@@ -329,11 +368,31 @@ impl DebuggerState {
     }
 
     fn step(&mut self) -> DebuggingResult {
-        unimplemented!()
+        match self.state.execute_once() {
+            Ok(ExecutionState::Running) => Ok(DebuggingState::Running),
+            Ok(ExecutionState::Finished) => Ok(DebuggingState::Finished),
+            Err(err) => {
+                println!("{}", err);
+                Ok(DebuggingState::Finished)
+            }
+        }
     }
 
     fn continue_to_breakpoint(&mut self) -> DebuggingResult {
-        unimplemented!()
+        loop {
+            match self.state.execute_once() {
+                Ok(ExecutionState::Finished) => return Ok(DebuggingState::Finished),
+                Err(err) => {
+                    println!("{}", err);
+                    return Ok(DebuggingState::Finished);
+                }
+                _ => {}
+            }
+
+            if self.breakpoints.contains(&self.state.get_pc()) {
+                break Ok(DebuggingState::Paused);
+            }
+        }
     }
 
     fn quit(&self) -> DebuggingResult {
