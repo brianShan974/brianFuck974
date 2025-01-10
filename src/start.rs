@@ -1,4 +1,5 @@
 use crate::{
+    debugger::debugger_state::DebuggerState,
     executor::{executing_state::ExecutionState, executor_state::ExecutorState},
     parsing_src::translate_into_commands,
 };
@@ -27,19 +28,7 @@ pub fn execute(cmd: &str) {
 pub fn debug(cmd: &str) {
     match translate_into_commands(cmd, true) {
         Ok((commands, breakpoints)) => {
-            let mut state = ExecutorState::new(commands);
-            loop {
-                match state.execute_once() {
-                    Ok(ExecutionState::Running) => {}
-                    Ok(ExecutionState::Finished) => {
-                        break;
-                    }
-                    Err(info) => {
-                        println!("{}", info);
-                        break;
-                    }
-                }
-            }
+            let mut debugger = DebuggerState::new(commands, breakpoints);
         }
         Err(info) => println!("{}", info),
     };

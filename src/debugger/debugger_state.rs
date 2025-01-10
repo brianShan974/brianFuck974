@@ -1,4 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    char,
+    collections::{HashMap, HashSet},
+};
 
 use super::{debugging_error::DebuggingError, debugging_state::DebuggingState};
 
@@ -73,8 +76,8 @@ impl DebuggerState {
             .ok_or(DebuggingError::IndexOutOfBounds)?;
 
         println!("The cell at index {} has the value {}.", index, value);
-        if (0..128).contains(&value) {
-            println!("The value is a valid character <{}>.", value as u8 as char);
+        if let Some(c) = char::from_u32(value as u32) {
+            println!("The value is a valid character <{}>.", c);
         }
 
         if let Some(mark) = self.c_marked_indices.get(&index) {
@@ -226,6 +229,14 @@ impl DebuggerState {
                 Ok(DebuggingState::Finished)
             }
         }
+    }
+
+    fn run_instructions(&mut self, instructions: String) -> DebuggingResult {
+        for instruction in instructions.chars() {
+            self.run_instruction(instruction)?;
+        }
+
+        Ok(DebuggingState::Running)
     }
 
     fn mark(&mut self, name: String, index: Option<usize>) -> DebuggingResult {
