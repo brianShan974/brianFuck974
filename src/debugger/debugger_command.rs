@@ -4,7 +4,7 @@ use crate::executor::executor_state::Int;
 
 use super::parse_error::DebuggerCommandParseError;
 
-enum DebuggerCommand {
+pub enum DebuggerCommand {
     /// A no-op command that does not do anything.
     NoOp,
 
@@ -141,11 +141,23 @@ impl TryFrom<String> for DebuggerCommand {
                     let index = parse_optional_usize(&mut input)?;
                     Ok(Self::PrintCell(index))
                 }
-                "pai" | "print_all_instructions" => Ok(Self::PrintAllInstructions),
-                "pac" | "print_all_cells" => Ok(Self::PrintAllCells),
+                "pai" | "print_all_instructions" => {
+                    if input.next().is_some() {
+                        Err(DebuggerCommandParseError::InvalidCommandFormat)
+                    } else {
+                        Ok(Self::PrintAllInstructions)
+                    }
+                }
+                "pac" | "print_all_cells" => {
+                    if input.next().is_some() {
+                        Err(DebuggerCommandParseError::InvalidCommandFormat)
+                    } else {
+                        Ok(Self::PrintAllCells)
+                    }
+                }
                 "li" | "list_instruction" => {
                     let index = parse_optional_usize(&mut input)?;
-                    Ok(Self::PrintCell(index))
+                    Ok(Self::ListInstruction(index))
                 }
                 "lli" | "long_list_instruction" => {
                     let length = parse_usize_value(&mut input, false)?;
@@ -223,8 +235,20 @@ impl TryFrom<String> for DebuggerCommand {
                     let mark = parse_string_value(&mut input, true)?;
                     Ok(Self::JumpMarkedCell(mark))
                 }
-                "jb" | "jump_back" => Ok(Self::JumpBack),
-                "jbc" | "jump_back_cell" => Ok(Self::JumpBackCell),
+                "jb" | "jump_back" => {
+                    if input.next().is_some() {
+                        Err(DebuggerCommandParseError::InvalidCommandFormat)
+                    } else {
+                        Ok(Self::JumpBack)
+                    }
+                }
+                "jbc" | "jump_back_cell" => {
+                    if input.next().is_some() {
+                        Err(DebuggerCommandParseError::InvalidCommandFormat)
+                    } else {
+                        Ok(Self::JumpBackCell)
+                    }
+                }
                 "b" | "breakpoint" => {
                     let index = parse_optional_usize(&mut input)?;
                     Ok(Self::Breakpoint(index))
@@ -241,9 +265,27 @@ impl TryFrom<String> for DebuggerCommand {
                     let mark = parse_string_value(&mut input, true)?;
                     Ok(Self::RemoveBreakpointMark(mark))
                 }
-                "s" | "step" => Ok(Self::Step),
-                "ctb" | "continue_to_breakpoint" => Ok(Self::ContinueToBreakpoint),
-                "q" | "quit" => Ok(Self::Quit),
+                "s" | "step" => {
+                    if input.next().is_some() {
+                        Err(DebuggerCommandParseError::InvalidCommandFormat)
+                    } else {
+                        Ok(Self::Step)
+                    }
+                }
+                "ctb" | "continue_to_breakpoint" => {
+                    if input.next().is_some() {
+                        Err(DebuggerCommandParseError::InvalidCommandFormat)
+                    } else {
+                        Ok(Self::ContinueToBreakpoint)
+                    }
+                }
+                "q" | "quit" => {
+                    if input.next().is_some() {
+                        Err(DebuggerCommandParseError::InvalidCommandFormat)
+                    } else {
+                        Ok(Self::Quit)
+                    }
+                }
                 _ => Err(Self::Error::InvalidCommandFormat),
             }
         } else {

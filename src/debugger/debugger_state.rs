@@ -3,7 +3,10 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-use super::{debugging_error::DebuggingError, debugging_state::DebuggingState};
+use super::{
+    debugger_command::DebuggerCommand, debugging_error::DebuggingError,
+    debugging_state::DebuggingState, parse_error::DebuggerCommandParseError,
+};
 
 use crate::executor::{
     executing_state::ExecutionState,
@@ -36,6 +39,53 @@ impl DebuggerState {
             jump_history: Vec::new(),
             jump_cell_history: Vec::new(),
         }
+    }
+
+    pub fn execute_debugger_command(
+        &mut self,
+        command: String,
+    ) -> Result<DebuggingResult, DebuggerCommandParseError> {
+        let command = DebuggerCommand::try_from(command)?;
+
+        use DebuggerCommand as DC;
+        let result = match command {
+            DC::NoOp => Ok(DebuggingState::Running),
+            DC::PrintInstruction(index) => self.print_instruction(index),
+            DC::PrintCell(index) => self.print_cell(index),
+            DC::PrintAllInstructions => self.print_all_instructions(),
+            DC::PrintAllCells => self.print_all_cells(),
+            DC::ListInstruction(index) => self.list_instruction(index),
+            DC::LongListInstruction(length, index) => self.long_list_instruction(length, index),
+            DC::ListMarkedInstruction(mark) => self.list_marked_instruction(mark),
+            DC::LongListMarkedInstruction(length, mark) => {
+                self.long_list_marked_instruction(length, mark)
+            }
+            DC::ListCell(index) => self.list_cell(index),
+            DC::LongListCell(length, index) => self.long_list_cell(length, index),
+            DC::ListMarkedCell(mark) => self.list_marked_cell(mark),
+            DC::LongListMarkedCell(length, mark) => self.long_list_marked_cell(length, mark),
+            DC::SetCell(value, index) => self.set_cell(value, index),
+            DC::SetMarkedCell(value, mark) => self.set_marked_cell(value, mark),
+            DC::RunInstruction(instruction) => self.run_instruction(instruction),
+            DC::RunInstructions(instructions) => self.run_instructions(instructions),
+            DC::Mark(mark, index) => self.mark(mark, index),
+            DC::MarkCell(mark, index) => self.mark_cell(mark, index),
+            DC::Jump(index) => self.jump(index),
+            DC::JumpMark(mark) => self.jump_mark(mark),
+            DC::JumpCell(index) => self.jump_cell(index),
+            DC::JumpMarkedCell(mark) => self.jump_marked_cell(mark),
+            DC::JumpBack => self.jump_back(),
+            DC::JumpBackCell => self.jump_back_cell(),
+            DC::Breakpoint(index) => self.breakpoint(index),
+            DC::BreakpointMark(mark) => self.breakpoint_mark(mark),
+            DC::RemoveBreakpoint(index) => self.remove_breakpoint(index),
+            DC::RemoveBreakpointMark(mark) => self.remove_breakpoint_mark(mark),
+            DC::Step => self.step(),
+            DC::ContinueToBreakpoint => self.continue_to_breakpoint(),
+            DC::Quit => self.quit(),
+        };
+
+        Ok(result)
     }
 
     fn print_instruction(&self, index: Option<usize>) -> DebuggingResult {
@@ -138,12 +188,12 @@ impl DebuggerState {
         Ok(DebuggingState::Running)
     }
 
-    fn list_marked_instruction(&self, name: String) -> DebuggingResult {
-        self.long_list_marked_instruction(5, name)
+    fn list_marked_instruction(&self, mark: String) -> DebuggingResult {
+        self.long_list_marked_instruction(5, mark)
     }
 
-    fn long_list_marked_instruction(&self, length: usize, name: String) -> DebuggingResult {
-        if let Some(index) = self.i_marks.get(&name) {
+    fn long_list_marked_instruction(&self, length: usize, mark: String) -> DebuggingResult {
+        if let Some(index) = self.i_marks.get(&mark) {
             self.long_list_instruction(length, Some(*index))
         } else {
             Err(DebuggingError::MarkNotFound)
@@ -181,12 +231,12 @@ impl DebuggerState {
         Ok(DebuggingState::Running)
     }
 
-    fn list_marked_cell(&self, name: String) -> DebuggingResult {
-        self.long_list_marked_cell(5, name)
+    fn list_marked_cell(&self, mark: String) -> DebuggingResult {
+        self.long_list_marked_cell(5, mark)
     }
 
-    fn long_list_marked_cell(&self, length: usize, name: String) -> DebuggingResult {
-        if let Some(index) = self.c_marks.get(&name) {
+    fn long_list_marked_cell(&self, length: usize, mark: String) -> DebuggingResult {
+        if let Some(index) = self.c_marks.get(&mark) {
             self.long_list_cell(length, Some(*index))
         } else {
             Err(DebuggingError::MarkNotFound)
@@ -203,8 +253,8 @@ impl DebuggerState {
         unimplemented!()
     }
 
-    fn set_marked_cell(&mut self, value: Int, name: String) -> DebuggingResult {
-        if let Some(index) = self.c_marks.get(&name) {
+    fn set_marked_cell(&mut self, value: Int, mark: String) -> DebuggingResult {
+        if let Some(index) = self.c_marks.get(&mark) {
             self.set_cell(value, Some(*index))
         } else {
             Err(DebuggingError::MarkNotFound)
@@ -239,7 +289,7 @@ impl DebuggerState {
         Ok(DebuggingState::Running)
     }
 
-    fn mark(&mut self, name: String, index: Option<usize>) -> DebuggingResult {
+    fn mark(&mut self, mark: String, index: Option<usize>) -> DebuggingResult {
         let index = if let Some(i) = index {
             i
         } else {
@@ -247,17 +297,17 @@ impl DebuggerState {
         };
 
         if self.state.validate_command_index(index) {
-            if let Some(old_index) = self.i_marks.insert(name.clone(), index) {
+            if let Some(old_index) = self.i_marks.insert(mark.clone(), index) {
                 self.i_marked_indices.remove(&old_index);
             }
-            self.i_marked_indices.insert(index, name);
+            self.i_marked_indices.insert(index, mark);
             Ok(DebuggingState::Running)
         } else {
             Err(DebuggingError::IndexOutOfBounds)
         }
     }
 
-    fn mark_cell(&mut self, name: String, index: Option<usize>) -> DebuggingResult {
+    fn mark_cell(&mut self, mark: String, index: Option<usize>) -> DebuggingResult {
         let index = if let Some(i) = index {
             i
         } else {
@@ -265,10 +315,10 @@ impl DebuggerState {
         };
 
         if self.state.validate_cell_index(index) {
-            if let Some(old_index) = self.c_marks.insert(name.clone(), index) {
+            if let Some(old_index) = self.c_marks.insert(mark.clone(), index) {
                 self.c_marked_indices.remove(&old_index);
             }
-            self.c_marked_indices.insert(index, name);
+            self.c_marked_indices.insert(index, mark);
             Ok(DebuggingState::Running)
         } else {
             Err(DebuggingError::IndexOutOfBounds)
@@ -286,8 +336,8 @@ impl DebuggerState {
         }
     }
 
-    fn jump_mark(&mut self, name: String) -> DebuggingResult {
-        if let Some(index) = self.i_marks.get(&name) {
+    fn jump_mark(&mut self, mark: String) -> DebuggingResult {
+        if let Some(index) = self.i_marks.get(&mark) {
             self.jump(*index)
         } else {
             Err(DebuggingError::MarkNotFound)
@@ -305,8 +355,8 @@ impl DebuggerState {
         }
     }
 
-    fn jump_marked_cell(&mut self, name: String) -> DebuggingResult {
-        if let Some(index) = self.c_marks.get(&name) {
+    fn jump_marked_cell(&mut self, mark: String) -> DebuggingResult {
+        if let Some(index) = self.c_marks.get(&mark) {
             self.jump_cell(*index)
         } else {
             Err(DebuggingError::MarkNotFound)
@@ -347,8 +397,8 @@ impl DebuggerState {
         }
     }
 
-    fn breakpoint_mark(&mut self, name: String) -> DebuggingResult {
-        if let Some(index) = self.i_marks.get(&name) {
+    fn breakpoint_mark(&mut self, mark: String) -> DebuggingResult {
+        if let Some(index) = self.i_marks.get(&mark) {
             self.breakpoint(Some(*index))
         } else {
             Err(DebuggingError::MarkNotFound)
@@ -370,8 +420,8 @@ impl DebuggerState {
         }
     }
 
-    fn remove_breakpoint_mark(&mut self, name: String) -> DebuggingResult {
-        if let Some(index) = self.i_marks.get(&name) {
+    fn remove_breakpoint_mark(&mut self, mark: String) -> DebuggingResult {
+        if let Some(index) = self.i_marks.get(&mark) {
             self.remove_breakpoint(Some(*index))
         } else {
             Err(DebuggingError::MarkNotFound)
