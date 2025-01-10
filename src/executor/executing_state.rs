@@ -1,4 +1,4 @@
-pub enum RunningState {
+pub enum ExecutionState {
     Running,
     Finished,
 }

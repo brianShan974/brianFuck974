@@ -1,15 +1,13 @@
-mod command;
 mod command_line_args;
-mod execution_state;
+mod debugger;
+mod executor;
 mod parsing_src;
-mod running_state;
+mod start;
 
 use clap::Parser;
-use command::Command;
+
 use command_line_args::Args;
-use execution_state::ExecutionState;
-use parsing_src::translate_into_commands;
-use running_state::RunningState;
+use start::{debug, execute};
 
 fn main() {
     let args = Args::parse();
@@ -19,22 +17,9 @@ fn main() {
         Err(_) => panic!("Failed to read from the file!"),
     };
 
-    match translate_into_commands(&cmd_string) {
-        Ok(commands) => {
-            let mut state = ExecutionState::new(commands);
-            loop {
-                match state.execute_once() {
-                    Ok(RunningState::Running) => {}
-                    Ok(RunningState::Finished) => {
-                        break;
-                    }
-                    Err(info) => {
-                        println!("{}", info);
-                        break;
-                    }
-                }
-            }
-        }
-        Err(info) => println!("{}", info),
-    };
+    if args.debug {
+        debug(&cmd_string);
+    } else {
+        execute(&cmd_string);
+    }
 }

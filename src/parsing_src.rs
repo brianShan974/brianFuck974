@@ -1,8 +1,15 @@
-use crate::Command;
+use std::collections::HashSet;
 
-pub fn translate_into_commands(string: &str) -> Result<Vec<Command>, String> {
+use crate::executor::executor_command::ExecutorCommand as Command;
+
+pub fn translate_into_commands(
+    string: &str,
+    debug: bool,
+) -> Result<(Vec<Command>, HashSet<usize>), String> {
     let mut commands: Vec<Command> = Vec::new();
     let mut pos_in_commands: Vec<usize> = Vec::new();
+
+    let mut breakpoints = HashSet::new();
 
     let mut current_cmd_ptr: usize = 0;
 
@@ -28,6 +35,10 @@ pub fn translate_into_commands(string: &str) -> Result<Vec<Command>, String> {
                     ));
                 }
             }
+            ':' if debug => {
+                breakpoints.insert(current_cmd_ptr);
+                continue;
+            }
             _ => {
                 continue;
             }
@@ -41,6 +52,6 @@ pub fn translate_into_commands(string: &str) -> Result<Vec<Command>, String> {
             "Syntax Error: '['s and ']'s do not properly match. There are more '['s than ']'s ",
         ))
     } else {
-        Ok(commands)
+        Ok((commands, breakpoints))
     }
 }
