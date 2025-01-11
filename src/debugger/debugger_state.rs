@@ -434,20 +434,26 @@ impl DebuggerState {
     }
 
     fn step(&mut self) -> DebuggingResult {
-        match self.state.execute_once() {
+        let result = match self.state.execute_once() {
             Ok(ExecutionState::Running) => Ok(DebuggingState::Running),
             Ok(ExecutionState::Finished) => Ok(DebuggingState::Finished),
             Err(err) => {
                 println!("{}", err);
                 Ok(DebuggingState::Finished)
             }
+        };
+
+        if self.print_instruction(None).is_err() {
+            return result;
         }
+
+        result
     }
 
     fn continue_to_breakpoint(&mut self) -> DebuggingResult {
         loop {
-            match self.state.execute_once() {
-                Ok(ExecutionState::Finished) => return Ok(DebuggingState::Finished),
+            match self.step() {
+                Ok(DebuggingState::Finished) => return Ok(DebuggingState::Finished),
                 Err(err) => {
                     println!("{}", err);
                     return Ok(DebuggingState::Finished);
