@@ -28,8 +28,8 @@ pub enum DebuggerCommand {
     ListInstruction(Option<usize>),
 
     /// Lists n (specified by the first parameter) instructions before and after an index (specified
-    /// by the second parameter). For example, if `n = 5`, this command has the same effect as
-    /// ListInstruction(index). If the index is not provided, the program counter will be used.
+    /// by the second parameter). For example, if `n = 5`, this command works the same as
+    /// `ListInstruction(index)`. If the index is not provided, the program counter will be used.
     LongListInstruction(usize, Option<usize>),
 
     /// Lists 11 instructions around an instruction given its name. For example, if the index is
@@ -39,7 +39,7 @@ pub enum DebuggerCommand {
 
     /// Lists n (specified by the first parameter) instructions before and after a marked
     /// instruction (specified by the second parameter). For example, if `n = 5`, this command
-    /// has the same effect as ListInstruction(index). If the index is not provided, the program
+    /// works the same as `ListMarkedInstruction(index)`. If the index is not provided, the program
     /// counter will be used.
     LongListMarkedInstruction(usize, String),
 
@@ -48,7 +48,7 @@ pub enum DebuggerCommand {
     ListCell(Option<usize>),
 
     /// Lists n (specified by the first parameter) cells before and after an index (specified by the
-    /// second parameter). For example, if `n = 5`, this command works the same as ListCell(index).
+    /// second parameter). For example, if `n = 5`, this command works the same as `ListCell(index)`.
     /// If the index is not provided, the data pointer will be used.
     LongListCell(usize, Option<usize>),
 
@@ -57,7 +57,7 @@ pub enum DebuggerCommand {
     ListMarkedCell(String),
 
     /// Lists n (specified by the first parameter) cells before and after an index (specified by the
-    /// second parameter). For example, if `n = 5`, this command works the same as ListCell(index).
+    /// second parameter). For example, if `n = 5`, this command works the same as `ListMarkedCell(index)`.
     /// If the index is not provided, the data pointer will be used.
     LongListMarkedCell(usize, String),
 
