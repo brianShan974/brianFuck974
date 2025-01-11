@@ -1,4 +1,4 @@
-use std::str::Split;
+use std::str::SplitWhitespace;
 
 use crate::executor::executor_state::Int;
 
@@ -129,7 +129,7 @@ impl TryFrom<String> for DebuggerCommand {
 
     fn try_from(input: String) -> Result<Self, Self::Error> {
         let input = input.trim().to_lowercase();
-        let mut input = input.split(' ');
+        let mut input = input.split_whitespace();
 
         if let Some(initial) = input.next() {
             match initial {
@@ -295,7 +295,7 @@ impl TryFrom<String> for DebuggerCommand {
     }
 }
 
-fn parse_int_value(input: &mut Split<'_, char>) -> Result<Int, DebuggerCommandParseError> {
+fn parse_int_value(input: &mut SplitWhitespace<'_>) -> Result<Int, DebuggerCommandParseError> {
     if let Some(value) = input.next() {
         if let Ok(value) = value.parse() {
             Ok(value)
@@ -308,7 +308,7 @@ fn parse_int_value(input: &mut Split<'_, char>) -> Result<Int, DebuggerCommandPa
 }
 
 fn parse_usize_value(
-    input: &mut Split<'_, char>,
+    input: &mut SplitWhitespace<'_>,
     last: bool,
 ) -> Result<usize, DebuggerCommandParseError> {
     if let Some(value) = input.next() {
@@ -327,7 +327,7 @@ fn parse_usize_value(
 }
 
 fn parse_string_value(
-    input: &mut Split<'_, char>,
+    input: &mut SplitWhitespace<'_>,
     last: bool,
 ) -> Result<String, DebuggerCommandParseError> {
     let mark = input.next();
@@ -342,7 +342,7 @@ fn parse_string_value(
     }
 }
 
-fn parse_char_value(input: &mut Split<'_, char>) -> Result<char, DebuggerCommandParseError> {
+fn parse_char_value(input: &mut SplitWhitespace<'_>) -> Result<char, DebuggerCommandParseError> {
     let mark = input.next();
     if let Some(mark) = mark {
         if input.next().is_some() {
@@ -360,7 +360,7 @@ fn parse_char_value(input: &mut Split<'_, char>) -> Result<char, DebuggerCommand
 }
 
 fn parse_optional_usize(
-    input: &mut Split<'_, char>,
+    input: &mut SplitWhitespace<'_>,
 ) -> Result<Option<usize>, DebuggerCommandParseError> {
     let index = input.next();
     if let Some(index) = index {
