@@ -20,14 +20,14 @@ cargo run -- example.bf
 
 to run the program.
 
+## Install & Uninstall
+
 To install this interpreter on the system,
 `cd` into the project directory and run
 
 ```
 cargo install --path .
 ```
-
-## Install & Uninstall
 
 in the project directory.
 After installation,
