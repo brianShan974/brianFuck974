@@ -31,7 +31,7 @@ pub fn translate_into_commands(
                     Command::JumpBack(pos)
                 } else {
                     return Err(String::from(
-                        "Syntax Error: '['s and ']'s do not properly match. There are more ']'s than '['s ",
+                        "Syntax Error: '['s and ']'s do not properly match. There are more ']'s than '['s",
                     ));
                 }
             }
@@ -49,7 +49,7 @@ pub fn translate_into_commands(
 
     if !pos_in_commands.is_empty() {
         Err(String::from(
-            "Syntax Error: '['s and ']'s do not properly match. There are more '['s than ']'s ",
+            "Syntax Error: '['s and ']'s do not properly match. There are more '['s than ']'s",
         ))
     } else {
         Ok((commands, breakpoints))
