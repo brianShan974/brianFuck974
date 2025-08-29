@@ -2,6 +2,10 @@
 name = "bfdbg"
 version = "0.2.0"
 edition = "2024"
+license = "MIT"
+description = "A brainfuck interpreter and debugger implemented in rust."
+repository = "https://github.com/brianShan974/bfdbg"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
