@@ -1,4 +1,4 @@
-use std::io::{self, Read};
+use std::io::{self, BufReader, Read};
 
 use crate::executor::{executing_state::ExecutionState, executor_command::ExecutorCommand};
 
@@ -191,7 +191,7 @@ impl ExecutorState {
     }
 
     fn input(&mut self) -> ExecutionResult {
-        let input_char = io::stdin()
+        let input_char = BufReader::new(io::stdin())
             .bytes()
             .next()
             .ok_or(ExecutionError::InputError)?
