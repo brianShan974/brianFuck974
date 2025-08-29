@@ -1,13 +1,9 @@
-mod command_line_args;
-mod debugger;
-mod executor;
-mod parsing_src;
-mod start;
+pub mod command_line_args;
 
 use clap::Parser;
 
+use bfdbg::start::{debug, execute};
 use command_line_args::Args;
-use start::{debug, execute};
 
 fn main() {
     let args = Args::parse();
