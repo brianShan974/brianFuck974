@@ -1,4 +1,6 @@
-#[derive(Clone)]
+use derive_more::Display;
+
+#[derive(Clone, Display)]
 pub enum ExecutorCommand {
     MoveRight,
     MoveLeft,
@@ -6,21 +8,8 @@ pub enum ExecutorCommand {
     Decrement,
     Output,
     Input,
+    #[display("JumpForward({})", _0)]
     JumpForward(usize),
+    #[display("JumpBack({})", _0)]
     JumpBack(usize),
-}
-
-impl std::fmt::Display for ExecutorCommand {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::MoveRight => write!(f, "MoveRight"),
-            Self::MoveLeft => write!(f, "MoveLeft"),
-            Self::Increment => write!(f, "Increment"),
-            Self::Decrement => write!(f, "Decrement"),
-            Self::Output => write!(f, "Output"),
-            Self::Input => write!(f, "Input"),
-            Self::JumpForward(pos) => write!(f, "JumpForward({})", pos),
-            Self::JumpBack(pos) => write!(f, "JumpBack({})", pos),
-        }
-    }
 }
