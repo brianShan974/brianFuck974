@@ -1,8 +1,6 @@
-# brianFuck974
+# bfdbg
 
-brianFuck974,
-named after me.
-My implementation of brainfuck in rust.
+*bfdbg*, an implementation of the brainfuck programming language in rust.
 In this implementation,
 initially 32 128-bit cells are used.
 The cells are actually stored in a `Vec` of `i128`s,
@@ -31,7 +29,7 @@ cargo install --path .
 
 in the project directory.
 After installation,
-you can run `brianfuck974` to call this interpreter.
+you can run `bfdbg` to call this interpreter.
 If you want to change the name of the command,
 please refer to `Cargo.toml` and change the `name` under `[[bin]]` before installation.
 
@@ -39,13 +37,13 @@ If you want to uninstall this program,
 please run
 
 ```
-cargo uninstall brianFuck974
+cargo uninstall bfdbg
 ```
 
 instead of
 
 ```
-cargo uninstall brianfuck974
+cargo uninstall bfdbg
 ```
 
 ## Usage
@@ -57,7 +55,7 @@ the first one is interpreter mode and the other one is debugger mode.
 
 In order to run a brainfuck source file,
 simply run
-`brianfuck974 <path>`.
+`bfdbg <path>`.
 
 ### Debugger Mode
 
@@ -65,7 +63,7 @@ The debugger mode is triggered by passing the `--debug` or `-d` flag.
 For example,
 to debug a brainfuck source file,
 simply run
-`brianfuck974 --debug <path>` or `brianfuck974 -d <path>`.
+`bfdbg --debug <path>` or `bfdbg -d <path>`.
 
 There are 32 debugger commands in total
 (including a no-op that does not do anything),
