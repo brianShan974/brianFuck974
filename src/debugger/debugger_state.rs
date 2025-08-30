@@ -141,6 +141,8 @@ impl DebuggerState {
     fn print_all_instructions(&self) -> DebuggingResult {
         let instructions = self.state.get_commands();
 
+        println!("There are {} instructions in total.", instructions.len());
+
         for (index, command) in instructions.iter().enumerate() {
             self.p_instruction(index, command);
         }
@@ -150,6 +152,8 @@ impl DebuggerState {
 
     fn print_all_cells(&self) -> DebuggingResult {
         let cells = self.state.get_cells();
+
+        println!("Currently, there are {} cells in total.", cells.len());
 
         for (index, cell) in cells.iter().enumerate() {
             self.p_cell(index, cell);
@@ -177,6 +181,12 @@ impl DebuggerState {
 
         let lower_bound = index.saturating_sub(length);
         let upper_bound = if index + length >= commands_len {
+            let singular = commands_len == 1;
+            println!(
+                "There {} only {commands_len} instruction{} in total!",
+                if singular { "is" } else { "are" },
+                if singular { "" } else { "s" }
+            );
             commands_len - 1
         } else {
             index + length
@@ -220,6 +230,12 @@ impl DebuggerState {
 
         let lower_bound = index.saturating_sub(length);
         let upper_bound = if index + length >= array_len {
+            let singular = array_len == 1;
+            println!(
+                "Currently, there {} only {array_len} cell{} in total!",
+                if singular { "is" } else { "are" },
+                if singular { "" } else { "s" }
+            );
             array_len - 1
         } else {
             index + length
