@@ -2,9 +2,10 @@
 
 *bfdbg*, an implementation of the brainfuck programming language in rust.
 In this implementation,
-initially 32 128-bit cells are used.
-The cells are actually stored in a `Vec` of `i128`s,
+the cells are actually stored in a `Vec` of `i128`s,
 so it could be extended whenever needed.
+Initially, there is only one cell,
+but the capacity of 32 cells is reserved.
 
 In order to run this interpreter,
 you can use `cargo run`.
@@ -21,13 +22,20 @@ to run the program.
 ## Install & Uninstall
 
 To install this interpreter on the system,
-`cd` into the project directory and run
+run
+
+```
+cargo install bfdbg
+```
+
+You can also `cd` into the project directory and run
 
 ```
 cargo install --path .
 ```
 
 in the project directory.
+
 After installation,
 you can run `bfdbg` to call this interpreter.
 If you want to change the name of the command,

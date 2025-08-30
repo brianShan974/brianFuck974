@@ -1,6 +1,6 @@
 [package]
 name = "bfdbg"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 license = "MIT"
 description = "A brainfuck interpreter and debugger implemented in rust."
